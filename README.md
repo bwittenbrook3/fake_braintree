@@ -31,6 +31,7 @@ of them (yet).
 
 ### PaymentMethod
 * `Braintree::PaymentMethod.find`
+* `Braintree::PaymentMethod.update`
 
 ### Subscription
 * `Braintree::Subscription.cancel`
