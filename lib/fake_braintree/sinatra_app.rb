@@ -87,6 +87,25 @@ module FakeBraintree
       Subscription.new(updates, options).update
     end
 
+    # Braintree::PaymentMethod.find
+    get '/merchants/:merchant_id/payment_methods/any/:token' do
+      credit_card = FakeBraintree.registry.credit_cards[params[:token]]
+      if credit_card
+        gzipped_response(200, credit_card.to_xml(root: 'credit_card'))
+      else
+        gzipped_response(404, {})
+      end
+    end
+
+    # Braintree::PaymentMethod.update
+    put '/merchants/:merchant_id/payment_methods/any/:token' do
+      credit_card = FakeBraintree.registry.credit_cards[params[:token]]
+      updates     = hash_from_request_body_with_key('payment_method')
+      options     = {token: params[:token], merchant_id: params[:merchant_id]}
+
+      CreditCard.new(updates, options).update
+    end
+
     # Braintree::CreditCard.find
     get '/merchants/:merchant_id/payment_methods/credit_card/:credit_card_token' do
       credit_card = FakeBraintree.registry.credit_cards[params[:credit_card_token]]
@@ -106,9 +125,20 @@ module FakeBraintree
       CreditCard.new(updates, options).update
     end
 
+    # Braintree::PaymentMethod.create
     # Braintree::CreditCard.create
     post '/merchants/:merchant_id/payment_methods' do
-      credit_card_hash = hash_from_request_body_with_key('credit_card')
+      request_hash = Hash.from_xml(request.body)
+      request.body.rewind
+
+      credit_card_hash =
+        if request_hash.key?('credit_card')
+          hash_from_request_body_with_key('credit_card')
+        else
+          payment_method_hash = hash_from_request_body_with_key('payment_method')
+          nonce = payment_method_hash.delete('payment_method_nonce')
+          FakeBraintree.registry.payment_methods[nonce].merge(payment_method_hash)
+        end
       options = {merchant_id: params[:merchant_id]}
 
       if credit_card_hash['options']
