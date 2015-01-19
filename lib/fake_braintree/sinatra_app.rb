@@ -1,3 +1,5 @@
+require 'json'
+
 module FakeBraintree
   class SinatraApp < Sinatra::Base
     set :show_exceptions, false
@@ -16,6 +18,25 @@ module FakeBraintree
           value
         end
       end
+    end
+
+    # js client api, POST credit_cards
+    post '/merchants/:merchant_id/client_api/v1/payment_methods/credit_cards' do
+      request_hash = Hash.from_xml(request.body)
+
+      callback = request_hash.delete('callback')
+      nonce = FakeBraintree::PaymentMethod.tokenize_card(request_hash)
+
+      headers = {
+        'Content-Encoding' => 'gzip',
+        'Content-Type' => 'application/javascript; charset=utf-8'
+      }
+      json = {
+        paymentMethods: [nonce: nonce],
+        status: 201
+      }.to_json
+      response = "#{callback}(#{json})"
+      [200, headers, gzip(response)]
     end
 
     # Braintree::Customer.create
