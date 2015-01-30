@@ -20,6 +20,14 @@ module FakeBraintree
       end
     end
 
+     post "/merchants/:merchant_id/client_token" do
+      # This generated token doesn't have uppercase letters like the actual
+      # Braintree-generated token does, but it is the right length.
+      token = SecureRandom.hex(748)
+      response = { value: token }.to_xml(root: :client_token)
+      gzipped_response(200, response)
+     end
+
     # js client api, POST credit_cards
     post '/merchants/:merchant_id/client_api/v1/payment_methods/credit_cards' do
       request_hash = Hash.from_xml(request.body)
