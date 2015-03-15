@@ -98,7 +98,7 @@ module FakeBraintree
 
     # Braintree::PaymentMethod.find
     get '/merchants/:merchant_id/payment_methods/any/:token' do
-      credit_card = FakeBraintree.registry.credit_cards[params[:token]]
+      credit_card = FakeBraintree::CreditCard.find(params[:token])
       if credit_card
         gzipped_response(200, credit_card.to_xml(root: 'credit_card'))
       else
@@ -117,7 +117,7 @@ module FakeBraintree
 
     # Braintree::CreditCard.find
     get '/merchants/:merchant_id/payment_methods/credit_card/:credit_card_token' do
-      credit_card = FakeBraintree.registry.credit_cards[params[:credit_card_token]]
+      credit_card = FakeBraintree::CreditCard.find(params[:credit_card_token])
       if credit_card
         gzipped_response(200, credit_card.to_xml(root: 'credit_card'))
       else
