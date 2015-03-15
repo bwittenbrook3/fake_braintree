@@ -14,6 +14,16 @@ describe 'Braintree::CreditCard.find' do
     expect(credit_card.unique_number_identifier).to eq TEST_CC_NUMBER
   end
 
+  it 'fetches associated subscriptions' do
+    subscription = create_subscription.subscription
+    credit_card = Braintree::CreditCard.find(subscription.payment_method_token)
+    expect(credit_card.subscriptions[0].plan_id).to eq subscription.plan_id
+
+    Braintree::Subscription.update(subscription.id, plan_id: '1123')
+    credit_card = Braintree::CreditCard.find(subscription.payment_method_token)
+    expect(credit_card.subscriptions[0].plan_id).to_not eq subscription.plan_id
+  end
+
   def token_for(month, year)
     braintree_credit_card_token(TEST_CC_NUMBER, [month, year].join('/'))
   end

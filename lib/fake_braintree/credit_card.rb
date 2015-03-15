@@ -15,6 +15,15 @@ module FakeBraintree
       set_unique_number_identifier
     end
 
+    def self.find(token)
+      FakeBraintree.registry.credit_cards[token].tap do |credit_card|
+        credit_card['subscriptions'] =
+          FakeBraintree.registry.subscriptions.values.select do |subscription|
+            subscription['payment_method_token'] == token
+          end if credit_card
+      end
+    end
+
     def create
       if valid_number?
         if token.nil?
